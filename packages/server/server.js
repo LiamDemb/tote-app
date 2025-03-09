@@ -2,24 +2,12 @@ const express = require("express")
 const cors = require("cors")
 const bodyParser = require("body-parser")
 const dotenv = require("dotenv")
-const { Pool } = require("pg")
+// Use the db module instead of creating a separate pool
+const db = require("./src/db")
 const { verifyToken } = require("./src/middleware/auth")
 
 // Load environment variables
 dotenv.config()
-
-// Database connection configuration
-const dbConfig = {
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-}
-
-// Only add password if it's provided
-if (process.env.DB_PASSWORD) {
-    dbConfig.password = process.env.DB_PASSWORD
-}
 
 // Initialize Express app
 const app = express()
@@ -40,36 +28,19 @@ app.use(
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-// Database connection
-const pool = new Pool(dbConfig)
+// Initialize the database
+db.initDatabase()
+    .then(() => {
+        console.log("Database initialized successfully")
+    })
+    .catch((err) => {
+        console.error("Failed to initialize database:", err)
+        // Don't exit the process here - let the server run even if DB init fails
+        // This allows you to fix DB issues without restarting the server
+    })
 
-// Test database connection
-pool.query("SELECT NOW()", (err, res) => {
-    if (err) {
-        console.error("Error connecting to the database:", err)
-    } else {
-        console.log("Database connected successfully")
-    }
-})
-
-// Create users table if it doesn't exist
-pool.query(
-    `
-  CREATE TABLE IF NOT EXISTS users (
-    id VARCHAR(255) PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    display_name VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`,
-    (err, res) => {
-        if (err) {
-            console.error("Error creating users table:", err)
-        } else {
-            console.log("Users table ready")
-        }
-    }
-)
+// Get the database pool from the db module
+const pool = db.pool
 
 // Routes
 app.get("/", (req, res) => {

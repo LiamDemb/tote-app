@@ -38,32 +38,32 @@ const runMigration = async (filePath) => {
 
 // Function to run all migrations
 const runMigrations = async () => {
-    // Create migrations table if it doesn't exist
-    const createMigrationsTable = `
-    CREATE TABLE IF NOT EXISTS migrations (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      applied_at TIMESTAMP NOT NULL DEFAULT NOW()
-    );
-  `
-
     try {
+        // Create migrations table if it doesn't exist
+        const createMigrationsTable = `
+            CREATE TABLE IF NOT EXISTS migrations (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                applied_at TIMESTAMP DEFAULT current_timestamp
+            )
+        `
+
         await pool.query(createMigrationsTable)
 
-        // Get list of migrations that have already been applied
+        // Get list of applied migrations
         const { rows: appliedMigrations } = await pool.query(
             "SELECT name FROM migrations"
         )
         const appliedMigrationNames = appliedMigrations.map((row) => row.name)
 
-        // Get all migration files from the migrations directory
+        // Get all migration files
         const migrationsDir = path.join(__dirname, "migrations")
         const migrationFiles = fs
             .readdirSync(migrationsDir)
             .filter((file) => file.endsWith(".sql"))
-            .sort() // Sort to run in numerical order
+            .sort() // Ensure files are processed in alphabetical order
 
-        // Run the migrations that haven't been applied yet
+        // Apply migrations that haven't been applied yet
         for (const file of migrationFiles) {
             if (!appliedMigrationNames.includes(file)) {
                 const filePath = path.join(migrationsDir, file)
@@ -76,30 +76,33 @@ const runMigrations = async () => {
                         [file]
                     )
                 } else {
-                    // Exit on first failure
-                    console.error("Migration failed. Exiting.")
-                    process.exit(1)
+                    console.error(`Failed to apply migration: ${file}`)
+                    throw new Error(`Migration failed: ${file}`)
                 }
-            } else {
-                console.log(`Skipping already applied migration: ${file}`)
             }
         }
 
         console.log("All migrations completed successfully!")
     } catch (err) {
         console.error("Error during migration process:", err)
-        process.exit(1)
-    } finally {
-        await pool.end()
+        throw err
     }
+    // IMPORTANT: Removed the pool.end() call that was here
+    // This allows the pool to remain open for other operations
 }
 
 // Run migrations when script is executed directly
 if (require.main === module) {
     runMigrations()
-        .then(() => console.log("Migration process completed."))
+        .then(() => {
+            console.log("Migration process completed.")
+            // Only end the pool when running as a standalone script
+            pool.end()
+            process.exit(0)
+        })
         .catch((err) => {
-            console.error("Migration process failed:", err)
+            console.error("Migration failed:", err)
+            pool.end()
             process.exit(1)
         })
 }

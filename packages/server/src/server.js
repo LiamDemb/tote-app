@@ -20,7 +20,6 @@ if (process.env.DB_PASSWORD) {
 
 // Create Express app
 const app = express()
-const port = process.env.PORT || 5000
 
 // Middleware
 app.use(
@@ -63,17 +62,16 @@ app.use("/api/users", userRoutes)
 // Start server
 const startServer = async () => {
     try {
-        // Initialize database if needed
+        // Initialize database
         const dbInitialized = await db.initDatabase()
         if (!dbInitialized) {
             console.warn(
-                "Database initialization failed. Some features may not work correctly."
+                "WARNING: Database initialization failed. Server starting anyway."
             )
-        } else {
-            console.log("Database connected successfully")
         }
 
-        // Start server
+        // Start the server
+        const port = process.env.PORT || 5000
         app.listen(port, () => {
             console.log(`Server running on port ${port}`)
         })
@@ -87,8 +85,22 @@ const startServer = async () => {
 process.on("SIGINT", async () => {
     console.log("Shutting down gracefully")
     try {
-        await db.pool.end()
-        console.log("Database pool closed")
+        // Use the db module's closeDatabase function instead of directly ending the pool
+        await db.closeDatabase()
+        console.log("Server shutdown complete")
+        process.exit(0)
+    } catch (error) {
+        console.error("Error during shutdown:", error)
+        process.exit(1)
+    }
+})
+
+// Handle SIGTERM (sent by hosting platforms like Render)
+process.on("SIGTERM", async () => {
+    console.log("Received SIGTERM signal - shutting down gracefully")
+    try {
+        await db.closeDatabase()
+        console.log("Server shutdown complete")
         process.exit(0)
     } catch (error) {
         console.error("Error during shutdown:", error)

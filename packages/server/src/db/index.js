@@ -13,14 +13,17 @@ const initDatabase = async () => {
         // Run migrations
         await runMigrations()
 
+        console.log("Database initialization completed successfully")
         return true
     } catch (error) {
         console.error("Database initialization failed:", error)
+        // Important: We don't close the pool here - we want to keep it open
+        // even if initialization fails, allowing for reconnection attempts
         return false
     }
 }
 
-// Helper function for transactions
+// Handle database transaction
 const transaction = async (callback) => {
     const client = await pool.connect()
     try {
@@ -28,36 +31,44 @@ const transaction = async (callback) => {
         const result = await callback(client)
         await client.query("COMMIT")
         return result
-    } catch (e) {
+    } catch (error) {
         await client.query("ROLLBACK")
-        throw e
+        throw error
     } finally {
         client.release()
     }
 }
 
-// Export basic database utilities first (these don't depend on models)
-const dbUtils = {
-    query,
+// Graceful shutdown function - should be called when the server is shutting down
+const closeDatabase = async () => {
+    console.log("Closing database connections...")
+    try {
+        await pool.end()
+        console.log("Database connections closed successfully")
+        return true
+    } catch (error) {
+        console.error("Error closing database connections:", error)
+        return false
+    }
+}
+
+// Export the database module
+module.exports = {
+    // Expose the pool for direct access when needed
     pool,
+    query,
     testConnection,
     initDatabase,
     transaction,
-}
-
-// Export the module
-module.exports = {
-    ...dbUtils,
-
-    // Models are loaded lazily to avoid circular dependencies
+    closeDatabase,
+    // Models are still accessible via the models getter
     get models() {
         return {
             users: require("./models/users"),
             products: require("./models/products"),
-            shoppingLists: require("./models/shopping_lists"),
             stores: require("./models/stores"),
-            prices: require("./models/prices"),
-            searchHistory: require("./models/search_history"),
+            shoppingLists: require("./models/shopping_lists"),
+            // Add other models as needed
         }
     },
 }
