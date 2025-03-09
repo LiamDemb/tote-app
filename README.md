@@ -24,6 +24,7 @@ This is a monorepo containing:
 -   Flutter SDK
 -   Node.js and npm
 -   PostgreSQL database
+-   Firebase project (for authentication)
 
 ### Setup
 
@@ -39,9 +40,31 @@ This is a monorepo containing:
     ```
 
 3. Set up the Flutter app:
+
     ```
     cd packages/tote_app
     flutter pub get
+    ```
+
+4. Configure Firebase:
+
+    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+    - Add Android, iOS, and web apps to your Firebase project
+    - Download the configuration files:
+        - `google-services.json` for Android
+        - `GoogleService-Info.plist` for iOS and macOS
+        - Generate `firebase_options.dart` using FlutterFire CLI or manually
+    - Copy the template files to their actual locations:
+        ```
+        cp packages/tote_app/lib/firebase_options.dart.template packages/tote_app/lib/firebase_options.dart
+        cp packages/tote_app/android/app/google-services.json.template packages/tote_app/android/app/google-services.json
+        cp packages/tote_app/ios/Runner/GoogleService-Info.plist.template packages/tote_app/ios/Runner/GoogleService-Info.plist
+        cp packages/tote_app/macos/Runner/GoogleService-Info.plist.template packages/tote_app/macos/Runner/GoogleService-Info.plist
+        ```
+    - Update each file with your Firebase project's actual configuration values
+
+5. Run the app:
+    ```
     flutter run
     ```
 
