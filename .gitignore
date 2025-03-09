@@ -254,3 +254,10 @@ app.*.symbols
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock# macOS specific
 .DS_Store
+
+# Firebase configuration files
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_options.dart
+**/.firebaserc
+**/firebase.json
