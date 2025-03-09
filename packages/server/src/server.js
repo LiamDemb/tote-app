@@ -25,9 +25,17 @@ const port = process.env.PORT || 5000
 // Middleware
 app.use(
     cors({
-        origin: ["*"], // Allow all origins for now, restrict later
-        methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
+        origin: "*", // Allow all origins for development
+        methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization",
+            "Accept",
+            "Origin",
+            "X-Requested-With",
+        ],
+        credentials: true,
+        maxAge: 86400, // Cache preflight requests for 24 hours
     })
 )
 app.use(express.json())

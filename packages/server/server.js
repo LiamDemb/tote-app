@@ -25,8 +25,18 @@ if (process.env.DB_PASSWORD) {
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// Middleware
-app.use(cors())
+// CORS Configuration - Properly enable CORS for all requests
+app.use(
+    cors({
+        origin: "*", // Allow all origins
+        methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+        credentials: true,
+        maxAge: 86400, // Cache preflight requests for 24 hours
+    })
+)
+
+// Other middleware
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
