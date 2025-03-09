@@ -1,0 +1,31 @@
+{
+    "name": "tote-api-server",
+    "version": "1.0.0",
+    "description": "API server for Tote Shopping App",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js",
+        "migrate": "node src/db/migrate.js",
+        "db:init": "node -e \"require('./src/db').initDatabase().then(success => process.exit(success ? 0 : 1))\"",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "engines": {
+        "node": ">=14.0.0"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "body-parser": "^1.20.3",
+        "cors": "^2.8.5",
+        "dotenv": "^16.0.3",
+        "express": "^4.18.2",
+        "firebase-admin": "^13.2.0",
+        "morgan": "^1.10.0",
+        "pg": "^8.8.0"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.20"
+    }
+}
