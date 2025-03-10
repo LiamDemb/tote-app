@@ -261,3 +261,9 @@ app.*.symbols
 **/firebase_options.dart
 **/.firebaserc
 **/firebase.json
+
+# SSL certificates
+*.cert
+*.key
+*.pem
+packages/server/ssl/
