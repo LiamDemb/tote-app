@@ -13,6 +13,9 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 5000
 
+// Handle preflight requests globally for all routes
+app.options("*", cors())
+
 // CORS Configuration - Properly enable CORS for all requests
 app.use(
     cors({

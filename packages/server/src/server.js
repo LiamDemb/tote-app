@@ -21,6 +21,9 @@ if (process.env.DB_PASSWORD) {
 // Create Express app
 const app = express()
 
+// Handle preflight requests globally for all routes
+app.options("*", cors())
+
 // Middleware
 app.use(
     cors({
