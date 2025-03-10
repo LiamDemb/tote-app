@@ -1,4 +1,4 @@
-const { pool, query, testConnection } = require("./config")
+const { pool, query, transaction, testConnection } = require("./config")
 const { runMigrations } = require("./migrate")
 
 // Database initialization function
@@ -23,22 +23,6 @@ const initDatabase = async () => {
     }
 }
 
-// Handle database transaction
-const transaction = async (callback) => {
-    const client = await pool.connect()
-    try {
-        await client.query("BEGIN")
-        const result = await callback(client)
-        await client.query("COMMIT")
-        return result
-    } catch (error) {
-        await client.query("ROLLBACK")
-        throw error
-    } finally {
-        client.release()
-    }
-}
-
 // Graceful shutdown function - should be called when the server is shutting down
 const closeDatabase = async () => {
     console.log("Closing database connections...")
@@ -57,9 +41,9 @@ module.exports = {
     // Expose the pool for direct access when needed
     pool,
     query,
+    transaction,
     testConnection,
     initDatabase,
-    transaction,
     closeDatabase,
     // Models are still accessible via the models getter
     get models() {

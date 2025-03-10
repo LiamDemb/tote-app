@@ -42,6 +42,22 @@ const query = async (text, params) => {
     }
 }
 
+// Transaction helper function
+const transaction = async (callback) => {
+    const client = await pool.connect()
+    try {
+        await client.query("BEGIN")
+        const result = await callback(client)
+        await client.query("COMMIT")
+        return result
+    } catch (error) {
+        await client.query("ROLLBACK")
+        throw error
+    } finally {
+        client.release()
+    }
+}
+
 // Simple function to test database connection
 const testConnection = async () => {
     try {
@@ -57,5 +73,6 @@ const testConnection = async () => {
 module.exports = {
     pool,
     query,
+    transaction,
     testConnection,
 }

@@ -22,39 +22,32 @@ const toCamelCase = (dbObj) => {
  * @returns {Promise<Object>} Created user object
  */
 const createUser = async (userData) => {
-    const {
-        email,
-        authProvider = "email",
-        firebaseUid,
-        firstName,
-        lastName,
-    } = userData
+    const { email, firebaseUid, firstName, lastName } = userData
 
-    console.log("Creating user in database:", {
+    console.log("Creating user with data:", {
         email,
         firebaseUid,
         firstName,
         lastName,
     })
 
-    return transaction(async (client) => {
-        try {
-            // Insert the user
-            const userResult = await client.query(
-                `INSERT INTO users (email, firebase_uid, first_name, last_name) 
-                VALUES ($1, $2, $3, $4) 
+    try {
+        // Use a transaction to ensure data consistency
+        return await transaction(async (client) => {
+            const result = await client.query(
+                `INSERT INTO users (email, firebase_uid, first_name, last_name)
+                VALUES ($1, $2, $3, $4)
                 RETURNING id, email, firebase_uid, first_name, last_name, created_at, updated_at`,
                 [email, firebaseUid, firstName, lastName]
             )
 
-            console.log("User inserted, result:", userResult.rows[0])
-            const user = toCamelCase(userResult.rows[0])
-            return user
-        } catch (error) {
-            console.error("Error in createUser transaction:", error)
-            throw error
-        }
-    })
+            console.log("User created:", result.rows[0])
+            return toCamelCase(result.rows[0])
+        })
+    } catch (error) {
+        console.error("Error creating user:", error)
+        throw error
+    }
 }
 
 /**

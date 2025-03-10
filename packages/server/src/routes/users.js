@@ -9,20 +9,29 @@ const db = require("../db")
  */
 router.post("/", async (req, res) => {
     try {
+        // Accept both camelCase and snake_case field names for compatibility
         const {
             email,
-            firebaseUid,
-            firstName,
-            lastName,
-            authProvider = "email",
+            // Primary way: snake_case (matches database)
+            firebase_uid: firebaseUidSnake,
+            first_name: firstNameSnake,
+            last_name: lastNameSnake,
+            // Fallback: camelCase (matches frontend model)
+            firebaseUid: firebaseUidCamel,
+            firstName: firstNameCamel,
+            lastName: lastNameCamel,
         } = req.body
+
+        // Prefer snake_case but fall back to camelCase if needed
+        const firebaseUid = firebaseUidSnake || firebaseUidCamel
+        const firstName = firstNameSnake || firstNameCamel
+        const lastName = lastNameSnake || lastNameCamel
 
         console.log("POST /api/users - Request received:", {
             email,
             firebaseUid,
             firstName,
             lastName,
-            authProvider,
         })
 
         // Validate required fields
@@ -55,7 +64,6 @@ router.post("/", async (req, res) => {
             firebaseUid,
             firstName,
             lastName,
-            authProvider,
         }
 
         console.log("POST /api/users - Creating user with data:", userData)
