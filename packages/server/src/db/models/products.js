@@ -71,12 +71,28 @@ const getProductsByCategory = async (category) => {
 // Search products by name or description
 const searchProducts = async (searchTerm) => {
     try {
+        console.log(`Executing product search for term: "${searchTerm}"`)
+
+        // Trim and validate search term
+        const trimmedTerm = searchTerm.trim()
+        if (!trimmedTerm) {
+            console.log("Empty search term, returning empty result")
+            return []
+        }
+
+        const searchPattern = `%${trimmedTerm}%`
+        console.log(`Using search pattern: "${searchPattern}"`)
+
         const result = await pool.query(
             `SELECT * FROM products 
-       WHERE name ILIKE $1 OR description ILIKE $1 OR brand ILIKE $1
-       ORDER BY name`,
-            [`%${searchTerm}%`]
+            WHERE name ILIKE $1 
+               OR description ILIKE $1 
+               OR brand ILIKE $1
+            ORDER BY name`,
+            [searchPattern]
         )
+
+        console.log(`Search found ${result.rows.length} results`)
 
         return result.rows.map(toCamelCase)
     } catch (error) {

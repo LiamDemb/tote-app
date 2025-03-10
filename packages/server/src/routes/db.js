@@ -95,6 +95,19 @@ router.put("/users/me", authenticateFirebaseToken, async (req, res) => {
 })
 
 // Product Routes
+// router.get("/products", async (req, res) => {
+//     try {
+//         // Get limit from query parameter or use default
+//         const limit = req.query.limit ? parseInt(req.query.limit) : 100;
+//
+//         const products = await models.products.getAllProducts(limit);
+//         res.json(products);
+//     } catch (error) {
+//         console.error("Error fetching all products:", error);
+//         res.status(500).json({ error: error.message });
+//     }
+// });
+
 router.post("/products", authenticateFirebaseToken, async (req, res) => {
     try {
         const product = await models.products.createProduct(req.body)
@@ -132,6 +145,43 @@ router.get("/products/category/:category", async (req, res) => {
     }
 })
 
+// Product search with query parameter - matches frontend call
+router.get("/products/search", async (req, res) => {
+    try {
+        const searchTerm = req.query.q || ""
+
+        // If empty search term, return empty result
+        if (!searchTerm.trim()) {
+            return res.json([])
+        }
+
+        const products = await models.products.searchProducts(searchTerm)
+
+        // If authenticated, record search
+        if (req.user) {
+            const searchData = {
+                userId: req.user.id,
+                query: searchTerm,
+                resultCount: products.length,
+            }
+
+            // Don't await, let it run in background
+            models.searchHistory
+                .recordSearch(searchData)
+                .catch((err) => console.error("Error recording search:", err))
+        }
+
+        console.log(
+            `Search for "${searchTerm}" found ${products.length} results`
+        )
+        res.json(products)
+    } catch (error) {
+        console.error(`Error searching products with query parameter:`, error)
+        res.status(500).json({ error: error.message })
+    }
+})
+
+// Existing product search with path parameter
 router.get("/products/search/:term", async (req, res) => {
     try {
         const products = await models.products.searchProducts(req.params.term)
